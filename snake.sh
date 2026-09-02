@@ -309,7 +309,7 @@ play_game() {
     delay=$(awk -v speed="$SPEED" 'BEGIN { printf "%.4f", 1 / speed }')
     render
     while [[ -z $game_over_reason ]]; do
-        read_input 0
+        read_input 0.01
         [[ -n $game_over_reason ]] && break
         sleep "$delay"
         [[ -n $game_over_reason ]] && break
@@ -360,6 +360,14 @@ run_tests() {
     assert_equal up "$next_direction" 'valid direction is accepted' || ((failures++))
     set_direction down
     assert_equal up "$next_direction" 'reverse direction is rejected' || ((failures++))
+
+    direction=up
+    next_direction=up
+    game_over_reason=
+    read_input 0.01 <<< d
+    assert_equal right "$next_direction" 'buffered movement input is consumed' || ((failures++))
+    read_input 0.01 <<< q
+    assert_equal 'You quit.' "$game_over_reason" 'buffered quit input is consumed' || ((failures++))
 
     snake_x=(2 2 3 3)
     snake_y=(2 3 3 2)
