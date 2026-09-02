@@ -53,31 +53,35 @@ is_integer() {
     [[ $1 =~ ^[0-9]+$ ]]
 }
 
+decimal_value() {
+    printf '%d' "$((10#$1))"
+}
+
 parse_options() {
     while (($#)); do
         case $1 in
             -w|--width)
                 (($# >= 2)) || fail "$1 requires a value"
                 is_integer "$2" || fail "width must be a positive integer"
-                WIDTH=$2
+                WIDTH=$(decimal_value "$2")
                 shift 2
                 ;;
             -h|--height)
                 (($# >= 2)) || fail "$1 requires a value"
                 is_integer "$2" || fail "height must be a positive integer"
-                HEIGHT=$2
+                HEIGHT=$(decimal_value "$2")
                 shift 2
                 ;;
             -s|--speed)
                 (($# >= 2)) || fail "$1 requires a value"
                 is_integer "$2" || fail "speed must be an integer"
-                SPEED=$2
+                SPEED=$(decimal_value "$2")
                 shift 2
                 ;;
             --seed)
                 (($# >= 2)) || fail "$1 requires a value"
                 is_integer "$2" || fail "seed must be an integer"
-                SEED=$2
+                SEED=$(decimal_value "$2")
                 shift 2
                 ;;
             --test)
@@ -255,6 +259,12 @@ cleanup_terminal() {
     fi
 }
 
+handle_signal() {
+    local exit_status=$1
+    trap - INT TERM
+    exit "$exit_status"
+}
+
 check_terminal_size() {
     local columns lines
     columns=$(tput cols 2>/dev/null) || columns=0
@@ -266,7 +276,9 @@ play_game() {
     [[ -t 0 && -t 1 ]] || fail "an interactive terminal is required to play"
     check_terminal_size
     old_stty=$(stty -g) || fail "could not read terminal settings"
-    trap cleanup_terminal EXIT INT TERM
+    trap cleanup_terminal EXIT
+    trap 'handle_signal 130' INT
+    trap 'handle_signal 143' TERM
     stty -echo -icanon min 0 time 0 || fail "could not configure terminal input"
     printf '\033[2J\033[H\033[?25l'
 
@@ -296,6 +308,9 @@ assert_equal() {
 
 run_tests() {
     local failures=0
+    assert_equal 31 "$(decimal_value 031)" 'leading-zero values use decimal parsing' || ((failures++))
+    assert_equal 30 "$(decimal_value 030)" 'decimal conversion preserves speed values' || ((failures++))
+
     WIDTH=12
     HEIGHT=8
     snake_x=(2 3 4)
