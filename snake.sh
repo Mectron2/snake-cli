@@ -95,7 +95,7 @@ parse_options() {
                 run_tests
                 exit 0
                 ;;
-            --help|-?)
+            --help|-\?)
                 usage
                 exit 0
                 ;;
@@ -207,9 +207,12 @@ advance_game() {
 
     local ate_food=0
     ((new_x == food_x && new_y == food_y)) && ate_food=1
-    local body_end=${#snake_x[@]}
-    ((ate_food == 0)) && ((body_end--))
-    for ((index = 0; index < body_end; index++)); do
+    local body_start=0 body_end=${#snake_x[@]}
+    if ((ate_food == 0)); then
+        ((body_end--))
+        body_start=1
+    fi
+    for ((index = body_start; index < body_end; index++)); do
         if ((snake_x[index] == new_x && snake_y[index] == new_y)); then
             game_over_reason="You ran into yourself."
             return 1
@@ -306,7 +309,9 @@ play_game() {
     delay=$(awk -v speed="$SPEED" 'BEGIN { printf "%.4f", 1 / speed }')
     render
     while [[ -z $game_over_reason ]]; do
-        read_input "$delay"
+        read_input 0
+        [[ -n $game_over_reason ]] && break
+        sleep "$delay"
         [[ -n $game_over_reason ]] && break
         advance_game
         render
@@ -334,9 +339,13 @@ assert_contains() {
 }
 
 run_tests() {
-    local failures=0 rendered
+    local failures=0 rendered invalid_option_status
     assert_equal 31 "$(decimal_value 031)" 'leading-zero values use decimal parsing' || ((failures++))
     assert_equal 30 "$(decimal_value 030)" 'decimal conversion preserves speed values' || ((failures++))
+
+    bash "$0" -x >/dev/null 2>&1
+    invalid_option_status=$?
+    assert_equal 2 "$invalid_option_status" 'unknown short options are rejected' || ((failures++))
 
     WIDTH=12
     HEIGHT=8
@@ -351,6 +360,18 @@ run_tests() {
     assert_equal up "$next_direction" 'valid direction is accepted' || ((failures++))
     set_direction down
     assert_equal up "$next_direction" 'reverse direction is rejected' || ((failures++))
+
+    snake_x=(2 2 3 3)
+    snake_y=(2 3 3 2)
+    direction=left
+    next_direction=left
+    food_x=10
+    food_y=7
+    game_over_reason=
+    advance_game
+    assert_equal '' "$game_over_reason" 'moving into the departing tail is allowed' || ((failures++))
+    assert_equal 3 "${snake_y[0]}" 'tail-entry turn removes the old tail' || ((failures++))
+    assert_equal 2 "${snake_x[3]}" 'tail-entry turn moves the head' || ((failures++))
 
     snake_x=(4 5 6)
     snake_y=(3 3 3)
