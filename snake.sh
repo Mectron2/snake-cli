@@ -9,6 +9,13 @@ DEFAULT_SPEED=8
 MIN_WIDTH=10
 MIN_HEIGHT=6
 
+COLOR_RESET=$'\033[0m'
+COLOR_BORDER=$'\033[36m'
+COLOR_TEXT=$'\033[1;33m'
+COLOR_SNAKE=$'\033[32m'
+COLOR_HEAD=$'\033[1;32m'
+COLOR_FOOD=$'\033[31m'
+
 WIDTH=$DEFAULT_WIDTH
 HEIGHT=$DEFAULT_HEIGHT
 SPEED=$DEFAULT_SPEED
@@ -222,33 +229,45 @@ advance_game() {
 }
 
 render() {
-    local row col index glyph
+    local row col index glyph cell_color
     printf '\033[H'
-    printf 'SNAKE   Score: %-5d   Length: %-3d   Controls: arrows/WASD, Q quits\n' "$score" "${#snake_x[@]}"
-    printf '+'
+    printf '%sSNAKE   Score: %-5d   Length: %-3d   Controls: arrows/WASD, Q quits%s\n' "$COLOR_TEXT" "$score" "${#snake_x[@]}" "$COLOR_RESET"
+    printf '%s+' "$COLOR_BORDER"
     for ((col = 0; col < WIDTH; col++)); do printf -- '-'; done
-    printf '+\n'
+    printf '+%s\n' "$COLOR_RESET"
 
     for ((row = 0; row < HEIGHT; row++)); do
-        printf '|'
+        printf '%s|%s' "$COLOR_BORDER" "$COLOR_RESET"
         for ((col = 0; col < WIDTH; col++)); do
             glyph=' '
-            if ((col == food_x && row == food_y)); then glyph='*'; fi
+            cell_color=
+            if ((col == food_x && row == food_y)); then
+                glyph='*'
+                cell_color=$COLOR_FOOD
+            fi
             for index in "${!snake_x[@]}"; do
                 if ((snake_x[index] == col && snake_y[index] == row)); then
                     glyph='o'
-                    ((index == ${#snake_x[@]} - 1)) && glyph='@'
+                    cell_color=$COLOR_SNAKE
+                    if ((index == ${#snake_x[@]} - 1)); then
+                        glyph='@'
+                        cell_color=$COLOR_HEAD
+                    fi
                     break
                 fi
             done
-            printf '%s' "$glyph"
+            if [[ -n $cell_color ]]; then
+                printf '%s%s%s' "$cell_color" "$glyph" "$COLOR_RESET"
+            else
+                printf '%s' "$glyph"
+            fi
         done
-        printf '|\n'
+        printf '%s|%s\n' "$COLOR_BORDER" "$COLOR_RESET"
     done
 
-    printf '+'
+    printf '%s+' "$COLOR_BORDER"
     for ((col = 0; col < WIDTH; col++)); do printf -- '-'; done
-    printf '+\n'
+    printf '+%s\n' "$COLOR_RESET"
 }
 
 cleanup_terminal() {
@@ -306,8 +325,16 @@ assert_equal() {
     fi
 }
 
+assert_contains() {
+    local haystack=$1 needle=$2 message=$3
+    if [[ $haystack != *"$needle"* ]]; then
+        printf 'FAIL: %s (missing %s)\n' "$message" "$needle" >&2
+        return 1
+    fi
+}
+
 run_tests() {
-    local failures=0
+    local failures=0 rendered
     assert_equal 31 "$(decimal_value 031)" 'leading-zero values use decimal parsing' || ((failures++))
     assert_equal 30 "$(decimal_value 030)" 'decimal conversion preserves speed values' || ((failures++))
 
@@ -367,6 +394,19 @@ run_tests() {
     game_over_reason=
     advance_game
     assert_equal 'You hit the wall.' "$game_over_reason" 'wall collision ends game' || ((failures++))
+
+    snake_x=(4 5 6)
+    snake_y=(3 3 3)
+    food_x=9
+    food_y=6
+    score=2
+    rendered=$(render)
+    assert_contains "$rendered" "$COLOR_TEXT" 'render colors the status text' || ((failures++))
+    assert_contains "$rendered" "$COLOR_BORDER" 'render colors the board border' || ((failures++))
+    assert_contains "$rendered" "$COLOR_SNAKE" 'render colors the snake body' || ((failures++))
+    assert_contains "$rendered" "$COLOR_HEAD" 'render colors the snake head' || ((failures++))
+    assert_contains "$rendered" "$COLOR_FOOD" 'render colors the food' || ((failures++))
+    assert_contains "$rendered" "$COLOR_RESET" 'render resets colors' || ((failures++))
 
     if ((failures)); then
         printf '%d test(s) failed.\n' "$failures" >&2
