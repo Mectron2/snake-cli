@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10151b" />
+    <title>Snake — Afterglow Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="intro" aria-labelledby="game-title">
+        <div class="brand-row">
+          <span class="mark" aria-hidden="true">✳</span>
+          <span class="eyebrow">Afterglow arcade / 01</span>
+        </div>
+
+        <div class="intro-copy">
+          <h1 id="game-title">Snake<span class="title-dot">.</span></h1>
+          <p class="dek">Keep it growing.<br />Keep it moving.</p>
+          <p class="description">A tiny test of timing and nerve. Guide the line, collect the sparks, and make every corner count.</p>
+        </div>
+
+        <div class="score-strip" aria-label="Game statistics">
+          <div class="score-block score-block--main">
+            <span class="label">Score</span>
+            <strong id="score">000</strong>
+          </div>
+          <div class="score-block">
+            <span class="label">Best run</span>
+            <strong id="high-score">000</strong>
+          </div>
+          <div class="status" id="status" data-state="ready">
+            <span class="status-light" aria-hidden="true"></span>
+            <span id="status-label">Ready</span>
+          </div>
+        </div>
+
+        <div class="instructions">
+          <span class="instruction-icon">↕</span>
+          <p><strong>Arrow keys</strong> or <strong>WASD</strong><br />to steer the snake.</p>
+        </div>
+      </section>
+
+      <section class="game-area" aria-label="Snake game">
+        <div class="game-meta">
+          <span class="level"><span class="level-dot"></span> Level 01 / Warm-up</span>
+          <span class="grid-size">20 × 20 grid</span>
+        </div>
+
+        <div class="board-wrap">
+          <div class="board-shadow" aria-hidden="true"></div>
+          <div class="canvas-frame">
+            <canvas id="game-canvas" width="600" height="600" aria-label="Snake game board"></canvas>
+            <div class="game-message" id="game-message">
+              <span class="message-kicker">Ready when you are</span>
+              <strong>Press a direction<br />to start</strong>
+              <span class="message-hint">or tap the pad below</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <button class="control-button control-button--secondary" id="pause-button" type="button" aria-label="Pause game">
+            <span class="pause-icon" aria-hidden="true">Ⅱ</span>
+            <span id="pause-label">Pause</span>
+          </button>
+          <div class="d-pad" aria-label="Directional controls">
+            <button class="pad-button pad-up" data-direction="up" type="button" aria-label="Move up">↑</button>
+            <button class="pad-button pad-left" data-direction="left" type="button" aria-label="Move left">←</button>
+            <button class="pad-button pad-down" data-direction="down" type="button" aria-label="Move down">↓</button>
+            <button class="pad-button pad-right" data-direction="right" type="button" aria-label="Move right">→</button>
+          </div>
+          <button class="control-button control-button--primary" id="new-game-button" type="button">
+            <span>New game</span>
+            <span class="button-arrow" aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <p class="mobile-hint">Swipe or use the directional pad to steer.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Built for the long way around.</span>
+      <span class="footer-symbol" aria-hidden="true">●</span>
+      <span>Use your instincts.</span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
