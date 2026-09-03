@@ -14,6 +14,10 @@ HEIGHT=$DEFAULT_HEIGHT
 SPEED=$DEFAULT_SPEED
 SEED=
 
+COLOR_GREEN=$'\033[32m'
+COLOR_RED=$'\033[31m'
+COLOR_RESET=$'\033[0m'
+
 snake_x=()
 snake_y=()
 direction="right"
@@ -222,7 +226,7 @@ advance_game() {
 }
 
 render() {
-    local row col index glyph
+    local row col index glyph glyph_color
     printf '\033[H'
     printf 'SNAKE   Score: %-5d   Length: %-3d   Controls: arrows/WASD, Q quits\n' "$score" "${#snake_x[@]}"
     printf '+'
@@ -233,15 +237,24 @@ render() {
         printf '|'
         for ((col = 0; col < WIDTH; col++)); do
             glyph=' '
-            if ((col == food_x && row == food_y)); then glyph='*'; fi
+            glyph_color=
+            if ((col == food_x && row == food_y)); then
+                glyph='*'
+                glyph_color=$COLOR_RED
+            fi
             for index in "${!snake_x[@]}"; do
                 if ((snake_x[index] == col && snake_y[index] == row)); then
                     glyph='o'
                     ((index == ${#snake_x[@]} - 1)) && glyph='@'
+                    glyph_color=$COLOR_GREEN
                     break
                 fi
             done
-            printf '%s' "$glyph"
+            if [[ -n $glyph_color ]]; then
+                printf '%s%s%s' "$glyph_color" "$glyph" "$COLOR_RESET"
+            else
+                printf '%s' "$glyph"
+            fi
         done
         printf '|\n'
     done
